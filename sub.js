@@ -134,7 +134,7 @@ module.exports = function (gulp) {
 	}
 
 	// wire all angular *.js files in the app (except *spec.js, and *demo-controller.js)
-	gulp.task('wireapp-ng', ['wiredep-src'], function () {
+	gulp.task('wireapp-ng', function () {
 	  var defer = deferred();
 
 	  glob('app/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', 'app/demo.js']}, function (er, files) {
@@ -149,7 +149,7 @@ module.exports = function (gulp) {
 	});
 
 	// wire all angular demo.js and *demo-controller.js files
-	gulp.task('wireapp-demo', ['wiredep-src', 'wireapp-ng'], function () {
+	gulp.task('wireapp-demo', function () {
 	  var defer = deferred();
 
 	  glob('app/{demo.js,**/*demo-controller.js}', function (er, files) {
@@ -164,7 +164,7 @@ module.exports = function (gulp) {
 	});
 
 	// wire all _*.scss/sass files in the app, note the file *must* be prefixed with an underscore to be autowired
-	gulp.task('wireapp-scss', ['wiredep-src'], function (callback) {
+	gulp.task('wireapp-scss', function (callback) {
 	  var defer = deferred();
 
 	  glob('app/**/_*.{scss,sass}', function (er, files) {
@@ -188,11 +188,11 @@ module.exports = function (gulp) {
 	  return defer.promise;
 	});
 
-	gulp.task('wireapp', ['wireapp-ng', 'wireapp-demo', 'wireapp-scss']);
+	gulp.task('wireall', function(callback) {
+		runSequence('wiredep-src', 'wiredep-test', 'wireapp-ng', 'wireapp-demo', 'wireapp-scss', callback);
+	});
 
-	gulp.task('autowire', ['wiredep-src', 'wiredep-test', 'wireapp']);
-
-	gulp.task('test', ['wiredep-test'], function(callback) {
+	gulp.task('test', ['wireall'], function(callback) {
 	  exec('karma start --singleRun=true', function (error, stdout, stderr) {
 		if (stdout) {
 		  plugins.util.log(plugins.util.colors.gray(stdout));
@@ -205,7 +205,7 @@ module.exports = function (gulp) {
 	});
 
 	// concats the js and css files as defined by the build:<> blocks in the index.html
-	gulp.task('useref', ['wiredep-src', 'wireapp'], function () {
+	gulp.task('useref', ['wireall'], function () {
 	  var assets = plugins.useref.assets();
 	  return gulp.src('app/index.html')
 		.pipe(assets)
@@ -334,14 +334,11 @@ module.exports = function (gulp) {
 	});
 
 	// tasks so that the dev env is ready to be served, for testing
-	gulp.task('build', ['wireapp', 'compass-dev', 'copy-fonts-dev']);
-
-	// tasks to build the distribution, but without linting, cleaning, or testing
-	gulp.task('dist-dirty', ['useref', 'inline-templates', 'ng-annotate', 'compass-dist', 'copy-fonts-dist', 'copy-sass', 'dist-bower-json']);
+	gulp.task('build', ['wireall', 'compass-dev', 'copy-fonts-dev']);
 
 	// build the distribution, but clean first
 	gulp.task('dist', function(callback) {
-	  runSequence('lint', 'test', 'clean-dist', 'dist-dirty', callback);
+	  runSequence('lint', 'test', 'clean-dist', 'useref', 'inline-templates', 'ng-annotate', 'compass-dist', 'copy-fonts-dist', 'copy-sass', 'dist-bower-json', callback);
 	});
 
 	// boot a webserver for the dev env, without building or watching
@@ -355,9 +352,9 @@ module.exports = function (gulp) {
 	});
 
 	// boot a webserver for the built distribution
-	gulp.task('serve-dist', ['dist-dirty'], function(callback) {
+	gulp.task('serve-dist', ['dist'], function(callback) {
 	  server(callback, {roots: 'dist', port: 9001});
 	});
 
 	gulp.task('default', ['build']);
-}
+};
