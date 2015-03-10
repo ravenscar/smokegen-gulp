@@ -2,7 +2,9 @@
   "name": "smokegen-gulp",
   "description": "This project manages the gulpfiles needed by the yeoman smokegen generator.",
   "version": "0.0.2",
+  "license": "MIT",
   "main": "index.js",
+  "repository": "https://github.com/ravenscar/smokegen-gulp.git",
   "author": {
     "name": "paul.nilsson@smokeball.com"
   },
