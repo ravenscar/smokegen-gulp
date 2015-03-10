@@ -1,7 +1,7 @@
 {
   "name": "smokegen-gulp",
   "description": "This project manages the gulpfiles needed by the yeoman smokegen generator.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "author": {
     "name": "paul.nilsson@smokeball.com"
