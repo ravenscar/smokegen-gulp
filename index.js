@@ -4,7 +4,11 @@
 
 module.exports = {
 	addSubGeneratorTasks: function (gulp) {
-		var sub = require('./sub.js');
-		sub(gulp);
+		var sub = require('./tasks.js');
+		sub(gulp).subTasks();
+	},
+	addTopGeneratorTasks: function (gulp) {
+		var sub = require('./tasks.js');
+		sub(gulp).topTasks();
 	}
-}
+};
