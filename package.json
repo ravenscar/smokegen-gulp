@@ -1,7 +1,7 @@
 {
   "name": "smokegen-gulp",
   "description": "This project manages the gulpfiles needed by the yeoman smokegen generator.",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "license": "MIT",
   "main": "index.js",
   "repository": "https://github.com/ravenscar/smokegen-gulp.git",
@@ -38,8 +38,7 @@
     "streamqueue": "^0.1.3",
     "wiredep": "^2.2.2"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=0.10.0"
   },
