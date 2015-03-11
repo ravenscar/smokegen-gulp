@@ -440,14 +440,14 @@ module.exports = function (gulp) {
 			runSequence('build', 'watch', 'serve-dev-internal', callback);
 		});
 
-		// boot a webserver for the built distribution
+		// build the distribution and boot a webserver for it
 		gulp.task('serve-dist', ['dist'], function (callback) {
 			server(callback, {roots: 'dist', port: 9001, gzip: true});
 		});
 
-		// boot a webserver for the built distribution
-		gulp.task('serve-dist-dirty', function (callback) {
-			server(callback, {roots: 'dist', port: 9001});
+		// boot a webserver for the distribution, without re-building it
+		gulp.task('serve-dist-nobuild', function (callback) {
+			server(callback, {roots: 'dist', port: 9001, gzip: true});
 		});
 
 		gulp.task('default', ['build']);
