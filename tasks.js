@@ -371,7 +371,7 @@ module.exports = function (gulp) {
 
 		// build the distribution, but clean first
 		gulp.task('dist', function (callback) {
-			runSequence('lint', 'test', 'clean-dist', 'wireall', 'useref', 'inline-templates', 'ng-annotate', 'compass-dist', 'copy-fonts-dist', 'copy-sass', 'dist-bower-json', callback);
+			runSequence('wireall', 'lint', 'test', 'clean-dist', 'useref', 'inline-templates', 'ng-annotate', 'compass-dist', 'copy-fonts-dist', 'copy-sass', 'dist-bower-json', callback);
 		});
 
 		// boot a webserver for the dev env, without building or watching
