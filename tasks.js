@@ -41,6 +41,8 @@ module.exports = function (gulp) {
 	// required to run the compass and karma tasks
 	var exec = require('child_process').exec;
 
+	var distLocation = (process.env.ANGULAR_DIST_FOLDER && path.join(process.env.ANGULAR_DIST_FOLDER, MODULE_NAME)) || 'dist';
+
 	/**
 	 * Launches a webserver which statically listens to the components
 	 *
@@ -119,7 +121,7 @@ module.exports = function (gulp) {
 	smokegenApi.common = function () {
 		// cleans up the build directories
 		gulp.task('clean-dist', function (cb) {
-			del(['dist'], cb);
+			del([distLocation], cb);
 		});
 		gulp.task('clean-dev', function (cb) {
 			del(['.tmp'], cb);
@@ -209,24 +211,24 @@ module.exports = function (gulp) {
 				.pipe(assets)
 				.pipe(assets.restore())
 				.pipe(plugins.useref())
-				.pipe(gulp.dest('dist'));
+				.pipe(gulp.dest(distLocation));
 		});
 
 		// inlines all non *demo.html html in any (sub)directory WITHIN app/ into angular templates, appends to dist/scripts/scripts.js
 		gulp.task('inline-src-templates', function () {
 			return streamqueue({objectMode: true},
-				gulp.src('dist/scripts/scripts.js'),
+				gulp.src(distLocation + '/scripts/scripts.js'),
 				gulp.src(['app/*/**/*.html', '!**/*demo.html'])
 					.pipe(plugins.angularTemplatecache({module: MODULE_NAME})))
 				.pipe(plugins.concat('scripts.js'))
-				.pipe(gulp.dest('dist/scripts'));
+				.pipe(gulp.dest(path.join(distLocation, 'scripts')));
 		});
 
 		// annotates all angular methods in dist/scripts/scripts.js with text versions of the DI attributes, to protect them when minifying.
 		gulp.task('ng-annotate', function () {
-			return gulp.src('dist/scripts/scripts.js')
+			return gulp.src(distLocation + '/scripts/scripts.js')
 				.pipe(plugins.ngAnnotate())
-				.pipe(gulp.dest('dist/scripts'));
+				.pipe(gulp.dest(path.join(distLocation, 'scripts')));
 		});
 
 		// run the compass task on app/main.scss
@@ -247,7 +249,7 @@ module.exports = function (gulp) {
 		}
 
 		gulp.task('compass-dist', function (callback) {
-			runCompass('dist/styles', callback);
+			runCompass(path.join(distLocation, 'styles'), callback);
 		});
 		gulp.task('compass-dev', function (callback) {
 			runCompass('.tmp/styles', callback);
@@ -263,7 +265,7 @@ module.exports = function (gulp) {
 		}
 
 		gulp.task('copy-fonts-dist', function () {
-			return copyFonts('dist/fonts');
+			return copyFonts(path.join(distLocation, 'fonts'));
 		});
 		gulp.task('copy-fonts-dev', function () {
 			return copyFonts('.tmp/fonts');
@@ -277,13 +279,13 @@ module.exports = function (gulp) {
 		 */
 		gulp.task('copy-sass', function () {
 			gulp.src('app/*/**/*.scss')
-				.pipe(gulp.dest('dist/sass'));
+				.pipe(gulp.dest(path.join(distLocation, 'sass')));
 			gulp.src('app/main.scss')
 				.pipe(plugins.replace(/.*strip-in-dist:start[\s\S]*?strip-in-dist:end.*/, ''))
 				.pipe(plugins.rename(function (path) {
 					path.basename = '_' + PROJECT_NAME;
 				}))
-				.pipe(gulp.dest('dist/sass'));
+				.pipe(gulp.dest(path.join(distLocation, 'sass')));
 		});
 
 		// This uses the name and version from the projects bower.json to build a new bower.json for the dist.
@@ -305,10 +307,10 @@ module.exports = function (gulp) {
 					'sass/_' + name + '.scss'
 				];
 
-				if (!fs.existsSync('dist')) {
-					fs.mkdirSync(path.join('dist'));
+				if (!fs.existsSync(distLocation)) {
+					fs.mkdirSync(path.join(distLocation));
 				}
-				fs.writeFile(path.join('dist', 'bower.json'), JSON.stringify(distBower, null, 2), callback);
+				fs.writeFile(path.join(distLocation, 'bower.json'), JSON.stringify(distBower, null, 2), callback);
 			}
 		});
 
@@ -355,11 +357,11 @@ module.exports = function (gulp) {
 		// inlines all *demo.html in any (sub)directory WITHIN app/ into angular templates, appends to dist/scripts/demo.js
 		gulp.task('inline-demo-templates', function () {
 			return streamqueue({objectMode: true},
-				gulp.src('dist/scripts/demo.js'),
+				gulp.src(path.join(distLocation, 'scripts', 'demo.js')),
 				gulp.src(['app/*/**/*demo.html'])
 					.pipe(plugins.angularTemplatecache({module: MODULE_NAME})))
 				.pipe(plugins.concat('demo.js'))
-				.pipe(gulp.dest('dist/scripts'));
+				.pipe(gulp.dest(path.join(distLocation, 'scripts')));
 		});
 
 		gulp.task('inline-templates', ['inline-src-templates', 'inline-demo-templates']);
@@ -384,7 +386,7 @@ module.exports = function (gulp) {
 
 		// boot a webserver for the built distribution
 		gulp.task('serve-dist', ['dist'], function (callback) {
-			server(callback, {roots: 'dist', port: 9001});
+			server(callback, {roots: distLocation, port: 9001});
 		});
 
 		gulp.task('default', ['build']);
@@ -398,24 +400,24 @@ module.exports = function (gulp) {
 		});
 
 		gulp.task('uglify', function () {
-			return gulp.src('dist/scripts/**/*.js')
+			return gulp.src(distLocation + '/scripts/**/*.js')
 				.pipe(plugins.uglify())
-				.pipe(gulp.dest('dist/scripts'));
+				.pipe(gulp.dest(path.join(distLocation, 'scripts')));
 		});
 
 		gulp.task('minify-css', function () {
-			return gulp.src('dist/styles/**/*.css')
+			return gulp.src(distLocation + '/styles/**/*.css')
 				.pipe(plugins.minifyCss())
-				.pipe(gulp.dest('dist/styles'));
+				.pipe(gulp.dest(path.join(distLocation, 'styles')));
 		});
 
 		gulp.task('gzip', function() {
-			return gulp.src(['dist/**/*'])
+			return gulp.src([distLocation + '/**/*'])
 				.pipe(plugins.gzip())
 				.pipe(plugins.rename( {
 					extname: "" // strip .gz ext
 				} ))
-				.pipe(gulp.dest('dist'));
+				.pipe(gulp.dest(distLocation));
 		});
 
 		gulp.task('compress', function (callback) {
@@ -442,12 +444,12 @@ module.exports = function (gulp) {
 
 		// build the distribution and boot a webserver for it
 		gulp.task('serve-dist', ['dist'], function (callback) {
-			server(callback, {roots: 'dist', port: 9001, gzip: true});
+			server(callback, {roots: distLocation, port: 9001, gzip: true});
 		});
 
 		// boot a webserver for the distribution, without re-building it
 		gulp.task('serve-dist-nobuild', function (callback) {
-			server(callback, {roots: 'dist', port: 9001, gzip: true});
+			server(callback, {roots: distLocation, port: 9001, gzip: true});
 		});
 
 		gulp.task('default', ['build']);
