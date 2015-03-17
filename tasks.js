@@ -121,7 +121,7 @@ module.exports = function (gulp) {
 	smokegenApi.common = function () {
 		// cleans up the build directories
 		gulp.task('clean-dist', function (cb) {
-			del([distLocation], cb);
+			del([distLocation], {force: true}, cb);
 		});
 		gulp.task('clean-dev', function (cb) {
 			del(['.tmp'], cb);
