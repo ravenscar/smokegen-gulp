@@ -85,7 +85,7 @@ module.exports = function (gulp) {
 		}
 
 		// change port and hostname to something static if you prefer
-		devServer = http.createServer(devApp).listen(options.port);
+		devServer = http.createServer(devApp).listen(options.port, '0.0.0.0');
 
 		devServer.on('error', function (error) {
 			log(colors.underline(colors.red('ERROR')) + ' Unable to start server!');
@@ -98,7 +98,8 @@ module.exports = function (gulp) {
 			url = 'http://' + devHost + ':' + devAddress.port + '/index.html';
 
 			log('Started dev server at ', colors.magenta(url));
-			plugins.open(url);
+            gulp.src('app/index.html')
+                .pipe(plugins.open('', {url: url}));
 			callback(); // we're done with this task for now
 		});
 	}
