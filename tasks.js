@@ -289,7 +289,15 @@ module.exports = function (gulp) {
 				.pipe(gulp.dest(path.join(distLocation, 'sass')));
 		});
 
-		// This uses the name and version from the projects bower.json to build a new bower.json for the dist.
+    /**
+     * Copy the source assets/ files from app/ to dist/
+     */
+    gulp.task('copy-assets', function () {
+      gulp.src('app/assets/**/*')
+        .pipe(gulp.dest(path.join(distLocation, 'assets')));
+    });
+
+    // This uses the name and version from the projects bower.json to build a new bower.json for the dist.
 		gulp.task('dist-bower-json', function (callback) {
 			var distBower = {}, name = PROJECT_NAME, version = bowerJson.version;
 
@@ -430,7 +438,7 @@ module.exports = function (gulp) {
 
 		// build the distribution, but clean first
 		gulp.task('dist', function (callback) {
-			runSequence('wireall', 'lint', 'test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-fonts-dist', 'compress', callback);
+			runSequence('wireall', 'lint', 'test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'compress', callback);
 		});
 
 		// boot a webserver for the dev env, without building or watching
