@@ -27,6 +27,7 @@ module.exports = function (gulp) {
 	var streamqueue = require('streamqueue');
 	var runSequence = require('run-sequence').use(gulp);
 	var stylish = require('jshint-stylish');
+  var vinylPaths = require('vinyl-paths');
 
 	// gulp + plugins
 	var plugins = require('gulp-load-plugins')();
@@ -297,6 +298,52 @@ module.exports = function (gulp) {
         .pipe(gulp.dest(path.join(distLocation, 'assets')));
     });
 
+    function rm(paths, cb) {
+      del(paths, {force: true}, cb);
+    }
+
+    gulp.task('rev-assets', function (cb) {
+      var oldPaths = vinylPaths();
+
+      gulp.src(path.join(distLocation, '{assets,fonts}', '**/*'))
+        .pipe(oldPaths)
+        .pipe(plugins.rev())
+        .pipe(gulp.dest(distLocation))
+        .pipe(plugins.rev.manifest())
+        .pipe(gulp.dest(distLocation))
+        .on('end', function () {
+          rm(oldPaths.paths, cb);
+        });
+    });
+
+    gulp.task('rev-cssjs', function (cb) {
+      var oldPaths = vinylPaths(),
+        manifest = gulp.src(path.join(distLocation, "rev-manifest.json"));
+
+      gulp.src(path.join(distLocation, '{styles,scripts}', '**/*'))
+        .pipe(oldPaths)
+        .pipe(plugins.revReplace( { manifest: manifest } ))
+        .pipe(plugins.rev())
+        .pipe(gulp.dest(distLocation))
+        .pipe(plugins.rev.manifest(path.join(distLocation, "rev-manifest.json"), { merge: true} ))
+        .pipe(gulp.dest(distLocation))
+        .on('end', function () {
+          rm(oldPaths.paths, cb);
+        });
+    });
+
+    gulp.task('rev-index', function () {
+      var manifest = gulp.src(path.join(distLocation, "rev-manifest.json"));
+
+      return gulp.src(path.join(distLocation, 'index.html'))
+        .pipe(plugins.revReplace( { manifest: manifest } ))
+        .pipe(gulp.dest(distLocation));
+    });
+
+    gulp.task('rev', function (callback) {
+      runSequence('rev-assets', 'rev-cssjs', 'rev-index', callback);
+    });
+
     // This uses the name and version from the projects bower.json to build a new bower.json for the dist.
 		gulp.task('dist-bower-json', function (callback) {
 			var distBower = {}, name = PROJECT_NAME, version = bowerJson.version;
@@ -438,7 +485,7 @@ module.exports = function (gulp) {
 
 		// build the distribution, but clean first
 		gulp.task('dist', function (callback) {
-			runSequence('wireall', 'lint', 'test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'compress', callback);
+			runSequence('wireall', 'lint', 'test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'rev', 'compress', callback);
 		});
 
 		// boot a webserver for the dev env, without building or watching
