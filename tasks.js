@@ -298,52 +298,6 @@ module.exports = function (gulp) {
         .pipe(gulp.dest(path.join(distLocation, 'assets')));
     });
 
-    function rm(paths, cb) {
-      del(paths, {force: true}, cb);
-    }
-
-    gulp.task('rev-assets', function (cb) {
-      var oldPaths = vinylPaths();
-
-      gulp.src(path.join(distLocation, '{assets,fonts}', '**/*'))
-        .pipe(oldPaths)
-        .pipe(plugins.rev())
-        .pipe(gulp.dest(distLocation))
-        .pipe(plugins.rev.manifest())
-        .pipe(gulp.dest(distLocation))
-        .on('end', function () {
-          rm(oldPaths.paths, cb);
-        });
-    });
-
-    gulp.task('rev-cssjs', function (cb) {
-      var oldPaths = vinylPaths(),
-        manifest = gulp.src(path.join(distLocation, "rev-manifest.json"));
-
-      gulp.src(path.join(distLocation, '{styles,scripts}', '**/*'))
-        .pipe(oldPaths)
-        .pipe(plugins.revReplace( { manifest: manifest } ))
-        .pipe(plugins.rev())
-        .pipe(gulp.dest(distLocation))
-        .pipe(plugins.rev.manifest(path.join(distLocation, "rev-manifest.json"), { merge: true} ))
-        .pipe(gulp.dest(distLocation))
-        .on('end', function () {
-          rm(oldPaths.paths, cb);
-        });
-    });
-
-    gulp.task('rev-index', function () {
-      var manifest = gulp.src(path.join(distLocation, "rev-manifest.json"));
-
-      return gulp.src(path.join(distLocation, 'index.html'))
-        .pipe(plugins.revReplace( { manifest: manifest } ))
-        .pipe(gulp.dest(distLocation));
-    });
-
-    gulp.task('rev', function (callback) {
-      runSequence('rev-assets', 'rev-cssjs', 'rev-index', callback);
-    });
-
     // This uses the name and version from the projects bower.json to build a new bower.json for the dist.
 		gulp.task('dist-bower-json', function (callback) {
 			var distBower = {}, name = PROJECT_NAME, version = bowerJson.version;
@@ -455,7 +409,53 @@ module.exports = function (gulp) {
 			runSequence('wiredep-src', 'wiredep-test', 'wireapp-ng', 'wireapp-scss', callback);
 		});
 
-		gulp.task('uglify', function () {
+    function rm(paths, cb) {
+      del(paths, {force: true}, cb);
+    }
+
+    gulp.task('rev-assets', function (cb) {
+      var oldPaths = vinylPaths();
+
+      gulp.src(path.join(distLocation, '{assets,fonts}', '**/*'))
+        .pipe(oldPaths)
+        .pipe(plugins.rev())
+        .pipe(gulp.dest(distLocation))
+        .pipe(plugins.rev.manifest())
+        .pipe(gulp.dest(distLocation))
+        .on('end', function () {
+          rm(oldPaths.paths, cb);
+        });
+    });
+
+    gulp.task('rev-cssjs', function (cb) {
+      var oldPaths = vinylPaths(),
+        manifest = gulp.src(path.join(distLocation, "rev-manifest.json"));
+
+      gulp.src(path.join(distLocation, '{styles,scripts}', '**/*'))
+        .pipe(oldPaths)
+        .pipe(plugins.revReplace( { manifest: manifest } ))
+        .pipe(plugins.rev())
+        .pipe(gulp.dest(distLocation))
+        .pipe(plugins.rev.manifest(path.join(distLocation, "rev-manifest.json"), { merge: true} ))
+        .pipe(gulp.dest(distLocation))
+        .on('end', function () {
+          rm(oldPaths.paths, cb);
+        });
+    });
+
+    gulp.task('rev-index', function () {
+      var manifest = gulp.src(path.join(distLocation, "rev-manifest.json"));
+
+      return gulp.src(path.join(distLocation, 'index.html'))
+        .pipe(plugins.revReplace( { manifest: manifest } ))
+        .pipe(gulp.dest(distLocation));
+    });
+
+    gulp.task('rev', function (callback) {
+      runSequence('rev-assets', 'rev-cssjs', 'rev-index', callback);
+    });
+
+    gulp.task('uglify', function () {
 			return gulp.src(distLocation + '/scripts/**/*.js')
 				.pipe(plugins.uglify())
 				.pipe(gulp.dest(path.join(distLocation, 'scripts')));
@@ -480,7 +480,25 @@ module.exports = function (gulp) {
 			runSequence('uglify', 'minify-css', 'gzip', callback);
 		});
 
-		// tasks so that the dev env is ready to be served, for testing
+    var awspublish = plugins.awspublish;
+
+    gulp.task('publish', function() {
+      var credentials = process.env.AWS_CREDENTIALS, publisher, headers;
+
+      if (!credentials) {
+        throw new Error("No AWS_CREDENTIALS env variable")
+      }
+
+      credentials = JSON.parse(credentials);
+      publisher = awspublish.create(credentials);
+      headers = { 'Content-Encoding': 'gzip' };
+
+      return gulp.src(path.join(distLocation, '**/*'))
+        .pipe(publisher.publish(headers))
+        .pipe(awspublish.reporter());
+    });
+
+    // tasks so that the dev env is ready to be served, for testing
 		gulp.task('build', ['wireall', 'compass-dev', 'copy-fonts-dev']);
 
 		// build the distribution, but clean first

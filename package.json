@@ -41,7 +41,9 @@
     "vinyl-paths": "^1.0.0",
     "wiredep": "^2.2.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "gulp-awspublish": "^1.0.6"
+  },
   "engines": {
     "node": ">=0.10.0"
   },
