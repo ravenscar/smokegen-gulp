@@ -436,7 +436,7 @@ module.exports = function (gulp) {
         .pipe(plugins.revReplace( { manifest: manifest } ))
         .pipe(plugins.rev())
         .pipe(gulp.dest(distLocation))
-        .pipe(plugins.rev.manifest("rev-manifest2.json", { merge: true} ))
+        .pipe(plugins.rev.manifest("rev-manifest.json", { merge: true} ))
         .pipe(gulp.dest(distLocation))
         .on('end', function () {
           rm(oldPaths.paths, cb);
