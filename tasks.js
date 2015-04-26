@@ -241,9 +241,9 @@ module.exports = function (gulp) {
 			}
 			exec('compass compile app/main.scss --css-dir ' + cssDir + ' --sass-dir app --import-path bower_components', function (error, stdout, stderr) {
 				if (stdout) {
-					plugins.util.log(plugins.util.colors.gray(stdout));
+					plugins.util.log(plugins.util.colors.red(stdout));
 				}
-				if (stdout) {
+				if (stderr) {
 					plugins.util.log(plugins.util.colors.red(stderr));
 				}
 				callback(error);
