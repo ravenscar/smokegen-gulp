@@ -106,18 +106,16 @@ module.exports = function (gulp) {
 	}
 
 	function wireSrc(files, key) {
-		var defer = deferred(), scriptString,
+		var scriptString,
 			block = new RegExp('(.*' + key + '.*)[\\s\\S]*?(.*end' + key + '.*)');
 
 		scriptString = _.map(files, function (filename) {
 			return '    <script src="' + filename.replace(/app\//, '') + '"></script>';
 		}).join(os.EOL);
 
-		defer.resolve(gulp.src('app/index.html')
+		return gulp.src('app/index.html')
 			.pipe(plugins.replace(block, '$1' + os.EOL + scriptString + os.EOL + '$2'))
-			.pipe(gulp.dest('app')));
-
-		return defer.promise;
+			.pipe(gulp.dest('app'));
 	}
 
 	smokegenApi.common = function () {
@@ -156,17 +154,8 @@ module.exports = function (gulp) {
 
 		// wire all angular *.js files in the app (except *spec.js, and *demo-controller.js)
 		gulp.task('wireapp-ng', function () {
-			var defer = deferred();
-
-			glob('app/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', 'app/demo.js']}, function (er, files) {
-				if (er) {
-					defer.reject(er);
-				} else {
-					defer.resolve(wireSrc(files, 'findng'));
-				}
-			});
-
-			return defer.promise;
+			var files = glob.sync('app/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', 'app/demo.js']});
+      return wireSrc(files, 'findng');
 		});
 
 		// wire all _*.scss/sass files in the app, note the file *must* be prefixed with an underscore to be autowired
@@ -347,17 +336,8 @@ module.exports = function (gulp) {
 
 		// wire all angular demo.js and *demo-controller.js files
 		gulp.task('wireapp-demo', function () {
-			var defer = deferred();
-
-			glob('app/{demo.js,**/*demo-controller.js}', function (er, files) {
-				if (er) {
-					defer.reject(er);
-				} else {
-					defer.resolve(wireSrc(files, 'finddemo'));
-				}
-			});
-
-			return defer.promise;
+      var files = glob.sync('app/{demo.js,**/*demo-controller.js}');
+      return wireSrc(files, 'finddemo');
 		});
 
 		gulp.task('wireall', function (callback) {
