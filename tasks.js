@@ -343,7 +343,7 @@ module.exports = function (gulp) {
 
     // wire all angular mock.js and *mock.js files
     gulp.task('wireapp-mock', function () {
-      var files = glob.sync('app/{**/*mock.js}');
+      var files = glob.sync('app/**/*mock.js');
       return wireSrc(files, 'findmock');
     });
 
