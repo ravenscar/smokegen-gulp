@@ -135,12 +135,12 @@ module.exports = function (gulp) {
 				.pipe(plugins.jshint.reporter('fail'));
 		});
 
-		// wires up index.html and main.scss with the bower dependencies, modifies the files in-place (in app/)
+    // wires up index.html and main.scss with the bower dependencies, modifies the files in-place (in app/)
 		gulp.task('wiredep-src', function () {
 			return gulp.src(['app/index.html', 'app/main.scss'])
 				.pipe(wiredep({
 					ignorePath: '../bower_components/',
-					exclude: 'bower_components/components-font-awesome/css/font-awesome.css'
+					exclude: ['bower_components/components-font-awesome/css/font-awesome.css', 'mocks.js']
 				}))
 				.pipe(gulp.dest('app'));
 		});
@@ -154,7 +154,7 @@ module.exports = function (gulp) {
 
 		// wire all angular *.js files in the app (except *spec.js, and *demo-controller.js)
 		gulp.task('wireapp-ng', function () {
-			var files = glob.sync('app/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', 'app/demo.js']});
+			var files = glob.sync('app/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', '**/*mock.js', 'app/demo.js']});
       return wireSrc(files, 'findng');
 		});
 
@@ -303,6 +303,7 @@ module.exports = function (gulp) {
 				distBower.ignore = [];
 				distBower.main = [
 					'scripts/scripts.js',
+					'scripts/mocks.js',
 					'sass/_' + name + '.scss'
 				];
 
@@ -334,14 +335,20 @@ module.exports = function (gulp) {
 	smokegenApi.subTasks = function () {
 		smokegenApi.common();
 
-		// wire all angular demo.js and *demo-controller.js files
-		gulp.task('wireapp-demo', function () {
+    // wire all angular demo.js and *demo-controller.js files
+    gulp.task('wireapp-demo', function () {
       var files = glob.sync('app/{demo.js,**/*demo-controller.js}');
       return wireSrc(files, 'finddemo');
-		});
+    });
 
-		gulp.task('wireall', function (callback) {
-			runSequence('wiredep-src', 'wiredep-test', 'wireapp-ng', 'wireapp-demo', 'wireapp-scss', callback);
+    // wire all angular mock.js and *mock.js files
+    gulp.task('wireapp-mock', function () {
+      var files = glob.sync('app/{**/*mock.js}');
+      return wireSrc(files, 'findmock');
+    });
+
+    gulp.task('wireall', function (callback) {
+			runSequence('wiredep-src', 'wiredep-test', 'wireapp-ng', 'wireapp-demo', 'wireapp-mock', 'wireapp-scss', callback);
 		});
 
 		// inlines all *demo.html in any (sub)directory WITHIN app/ into angular templates, appends to dist/scripts/demo.js
@@ -385,7 +392,7 @@ module.exports = function (gulp) {
 	smokegenApi.topTasks = function () {
 		smokegenApi.common();
 
-		gulp.task('wireall', function (callback) {
+    gulp.task('wireall', function (callback) {
 			runSequence('wiredep-src', 'wiredep-test', 'wireapp-ng', 'wireapp-scss', callback);
 		});
 
