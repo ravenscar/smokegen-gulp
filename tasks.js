@@ -199,6 +199,7 @@ module.exports = function (gulp) {
 		gulp.task('useref', function () {
 			var assets = plugins.useref.assets();
 			return gulp.src('app/index.html')
+        .pipe(plugins.replace(/\r\n/gm, '\n'))// replace all \r\n with \n as useref spits the dummy if we mix unix and windows EOL, and teamcity won't checkout CRLF
 				.pipe(assets)
 				.pipe(assets.restore())
 				.pipe(plugins.useref())
