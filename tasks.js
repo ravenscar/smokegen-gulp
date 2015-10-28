@@ -15,6 +15,15 @@ module.exports = function (gulp) {
     throw err;
   }
 
+  try {
+    var config = JSON.parse(fs.readFileSync(path.join('smokegen-gulp.json')));
+  } catch (err) {
+    console.error('Unable to parse smokegen-gulp.json');
+    throw err;
+  }
+
+  var webRoot = config.webRoot;
+
   var PROJECT_NAME = bowerJson.name || 'unknown-project';
   var MODULE_NAME = bowerJson.angularModule || (PROJECT_NAME + '-module');
 
@@ -101,23 +110,25 @@ module.exports = function (gulp) {
       url = 'http://' + devHost + ':' + devAddress.port + '/' + options.entrypoint;
 
       log('Started dev server at ', colors.magenta(url));
-            gulp.src('app/' + options.entrypoint)
-                .pipe(plugins.open('', {url: url}));
+      gulp.src(webRoot + '/' + options.entrypoint)
+        .pipe(plugins.open('', {url: url}));
       callback(); // we're done with this task for now
     });
   }
 
   function wireSrc(target, files, key) {
     var scriptString,
-      block = new RegExp('(.*' + key + '.*)[\\s\\S]*?(.*end' + key + '.*)');
+      block = new RegExp('(.*' + key + '.*)[\\s\\S]*?(.*end' + key + '.*)'),
+      re = new RegExp(webRoot + '\/');
+
 
     scriptString = _.map(files, function (filename) {
-      return '    <script src="' + filename.replace(/app\//, '') + '"></script>';
+      return '    <script src="' + filename.replace(re, '') + '"></script>';
     }).join(os.EOL);
 
     return gulp.src(target)
       .pipe(plugins.replace(block, '$1' + os.EOL + scriptString + os.EOL + '$2'))
-      .pipe(gulp.dest('app'));
+      .pipe(gulp.dest(webRoot));
   }
 
   smokegenApi.common = function () {
@@ -131,30 +142,30 @@ module.exports = function (gulp) {
     gulp.task('clean', ['clean-dist', 'clean-dev']);
 
     gulp.task('lint', function () {
-      return gulp.src(['gulpfile.js', 'app/**/*.js', '!app/**/*spec.js', '!app/**/*mock.js'])
+      return gulp.src(['gulpfile.js', webRoot + '/**/*.js', '!' + webRoot + '/**/*spec.js', '!' + webRoot + '/**/*mock.js'])
         .pipe(plugins.jshint())
         .pipe(plugins.jshint.reporter(stylish))
         .pipe(plugins.jshint.reporter('fail'));
     });
 
-    // wires up index.html and main.scss with the bower dependencies, modifies the files in-place (in app/)
+    // wires up index.html and main.scss with the bower dependencies, modifies the files in-place (in webRoot/)
     gulp.task('wiredep-src', function () {
-      return gulp.src(['app/index.html', 'app/main.scss'])
-          .pipe(wiredep({
-            ignorePath: '../bower_components/',
-            exclude: ['bower_components/components-font-awesome/css/font-awesome.css', 'mocks.js']
-          }))
-          .pipe(gulp.dest('app'));
+      return gulp.src([webRoot + '/index.html', webRoot + '/main.scss'])
+        .pipe(wiredep({
+          ignorePath: config.tasks.wiredepSrc.ignorePath,
+          exclude: config.tasks.wiredepSrc.exclude
+        }))
+        .pipe(gulp.dest(webRoot));
     });
 
-    // wires up index.html and main.scss with the bower dependencies, modifies the files in-place (in app/)
+    // wires up demo.html and main.scss with the bower dependencies, modifies the files in-place (in webRoot/)
     gulp.task('wiredep-demo', function () {
-      return gulp.src(['app/demo.html'])
-          .pipe(wiredep({
-            ignorePath: '../bower_components/',
-            exclude: ['bower_components/components-font-awesome/css/font-awesome.css', 'mocks.js']
-          }))
-          .pipe(gulp.dest('app'));
+      return gulp.src([webRoot + '/demo.html'])
+        .pipe(wiredep({
+          ignorePath: '../bower_components/',
+          exclude: ['bower_components/components-font-awesome/css/font-awesome.css', 'mocks.js']
+        }))
+        .pipe(gulp.dest(webRoot));
     });
 
     // autowires up test config with bower dependencies, modifies in-place.
@@ -164,23 +175,23 @@ module.exports = function (gulp) {
         .pipe(gulp.dest('./'));
     });
 
-    // wire all angular *.js files in the app (except *spec.js, and *demo-controller.js)
+    // wire all angular *.js files in the webRoot (except *spec.js, and *demo-controller.js)
     gulp.task('wireapp-ng', function () {
-      var files = glob.sync('app/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', '**/*mock.js', 'app/demo.js']});
-      return wireSrc('app/index.html', files, 'findng');
+      var files = glob.sync(webRoot + '/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', '**/*mock.js', webRoot + '/demo.js', webRoot + '/lib/**/*.js']});
+      return wireSrc(webRoot + '/index.html', files, 'findng');
     });
 
     // wire all angular *.js files in the demo (except *spec.js, and *demo-controller.js)
     gulp.task('wiredemo-ng', function () {
-      var files = glob.sync('app/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', '**/*mock.js', 'app/demo.js']});
-      return wireSrc('app/demo.html', files, 'findng');
+      var files = glob.sync(webRoot + '/**/*.js', {ignore: ['**/*spec.js', '**/*demo-controller.js', '**/*mock.js', webRoot + '/demo.js']});
+      return wireSrc(webRoot + '/demo.html', files, 'findng');
     });
 
-    // wire all _*.scss/sass files in the app, note the file *must* be prefixed with an underscore to be autowired
+    // wire all _*.scss/sass files in the webRoot, note the file *must* be prefixed with an underscore to be autowired
     gulp.task('wireapp-scss', function (callback) {
       var defer = deferred();
 
-      glob('app/**/_*.{scss,sass}', function (er, files) {
+      glob(webRoot + '/**/_*.{scss,sass}', function (er, files) {
         var scriptString;
 
         if (er) {
@@ -189,12 +200,13 @@ module.exports = function (gulp) {
         } else {
 
           scriptString = _.map(files, function (filename) {
-            return '@import "' + filename.replace(/app\//, '') + '";';
+            var re = new RegExp(webRoot + '\/');
+            return '@import "' + filename.replace(webRoot, '') + '";';
           }).join(os.EOL);
 
-          defer.resolve(gulp.src('app/main.scss')
+          defer.resolve(gulp.src(webRoot + '/main.scss')
             .pipe(plugins.replace(/(.*findcss.*)[\s\S]*?(.*endfindcss.*)/, '$1' + os.EOL + scriptString + os.EOL + '$2'))
-            .pipe(gulp.dest('app')));
+            .pipe(gulp.dest(webRoot)));
         }
       });
 
@@ -216,7 +228,7 @@ module.exports = function (gulp) {
     // concats the js and css files as defined by the build:<> blocks in the index.html
     gulp.task('useref', function () {
       var assets = plugins.useref.assets();
-      return gulp.src('app/index.html')
+      return gulp.src(webRoot + '/index.html')
         .pipe(plugins.replace(/\r\n/gm, '\n'))// replace all \r\n with \n as useref spits the dummy if we mix unix and windows EOL, and teamcity won't checkout CRLF
         .pipe(assets)
         .pipe(assets.restore())
@@ -224,11 +236,11 @@ module.exports = function (gulp) {
         .pipe(gulp.dest(distLocation));
     });
 
-    // inlines all non *demo.html html in any (sub)directory WITHIN app/ into angular templates, appends to dist/scripts/scripts.js
+    // inlines all non *demo.html html in any (sub)directory WITHIN webRoot/ into angular templates, appends to dist/scripts/scripts.js
     gulp.task('inline-src-templates', function () {
       return streamqueue({objectMode: true},
         gulp.src(distLocation + '/scripts/scripts.js'),
-        gulp.src(['app/*/**/*.html', '!**/*demo.html'])
+        gulp.src([webRoot + '/*/**/*.html', '!**/*demo.html'])
           .pipe(plugins.angularTemplatecache({module: MODULE_NAME})))
         .pipe(plugins.concat('scripts.js'))
         .pipe(gulp.dest(path.join(distLocation, 'scripts')));
@@ -241,13 +253,13 @@ module.exports = function (gulp) {
         .pipe(gulp.dest(path.join(distLocation, 'scripts')));
     });
 
-    // run the compass task on app/main.scss
+    // run the compass task on webRoot/main.scss
     function runCompass(cssDir, callback) {
       if (!cssDir) {
         callback(new Error('no cssDir supplied to runCompass'));
         return;
       }
-      exec('compass compile app/main.scss --css-dir ' + cssDir + ' --sass-dir app --import-path bower_components', function (error, stdout, stderr) {
+      exec('compass compile ' + webRoot + '/main.scss --css-dir ' + cssDir + ' --sass-dir ' + webRoot + ' --import-path bower_components', function (error, stdout, stderr) {
         if (stdout) {
           plugins.util.log(plugins.util.colors.red(stdout));
         }
@@ -282,15 +294,15 @@ module.exports = function (gulp) {
     });
 
     /**
-     * Copy the source sass (scss) files from app/ to dist/
+     * Copy the source sass (scss) files from webRoot/ to dist/
      * Will rename main.scss to PROJECT_NAME.scss
      *
      * This way modules using this one can use the scss sources rather than the MUCH larger dist/styles/main.css
      */
     gulp.task('copy-sass', function () {
-      gulp.src('app/*/**/*.scss')
+      gulp.src(webRoot + '/*/**/*.scss')
         .pipe(gulp.dest(path.join(distLocation, 'sass')));
-      gulp.src('app/main.scss')
+      gulp.src(webRoot + '/main.scss')
         .pipe(plugins.replace(/.*strip-in-dist:start[\s\S]*?strip-in-dist:end.*/, ''))
         .pipe(plugins.rename(function (path) {
           path.basename = '_' + PROJECT_NAME;
@@ -299,10 +311,10 @@ module.exports = function (gulp) {
     });
 
     /**
-     * Copy the source assets/ files from app/ to dist/
+     * Copy the source assets/ files from webRoot/ to dist/
      */
     gulp.task('copy-assets', function () {
-      gulp.src('app/assets/**/*')
+      gulp.src(webRoot + '/assets/**/*')
         .pipe(gulp.dest(path.join(distLocation, 'assets')));
     });
 
@@ -336,13 +348,13 @@ module.exports = function (gulp) {
     gulp.task('watch', function () {
       var sass, src;
 
-      sass = gulp.watch('app/**/*.scss', ['compass-dev']);
+      sass = gulp.watch(webRoot + '/**/*.scss', ['compass-dev']);
       sass.on('change', function (event) {
         plugins.util.log('Sass file changed ' + event.path + ' was ' + event.type + ', running compass');
       });
 
-      // watch all html/css/js files in the app and .tmp dirs
-      src = gulp.watch('{app,.tmp}/**/*.{html,css,js}');
+      // watch all html/css/js files in the webRoot and .tmp dirs
+      src = gulp.watch('{' + webRoot + ',.tmp}/**/*.{html,css,js}');
       src.on('change', function (event) {
         plugins.util.log('Source file changed ' + event.path + ' was ' + event.type);
         plugins.livereload.reload();
@@ -375,18 +387,18 @@ module.exports = function (gulp) {
 
     // wire all angular demo.js and *demo-controller.js files
     gulp.task('wireapp-demo', function () {
-      var files = glob.sync('app/{demo.js,**/*demo-controller.js}');
-      return wireSrc('app/demo.html', files, 'finddemo');
+      var files = glob.sync(webRoot + '/{demo.js,**/*demo-controller.js}');
+      return wireSrc(webRoot + '/demo.html', files, 'finddemo');
     });
 
-    // inlines all *demo.html in any (sub)directory WITHIN app/ into angular templates, appends to dist/scripts/demo.js
+    // inlines all *demo.html in any (sub)directory WITHIN webRoot/ into angular templates, appends to dist/scripts/demo.js
     gulp.task('inline-demo-templates', function () {
       return streamqueue({objectMode: true},
-          gulp.src(path.join(distLocation, 'scripts', 'demo.js')),
-          gulp.src(['app/*/**/*demo.html'])
-              .pipe(plugins.angularTemplatecache({module: MODULE_NAME})))
-          .pipe(plugins.concat('demo.js'))
-          .pipe(gulp.dest(path.join(distLocation, 'scripts')));
+        gulp.src(path.join(distLocation, 'scripts', 'demo.js')),
+        gulp.src([webRoot + '/*/**/*demo.html'])
+          .pipe(plugins.angularTemplatecache({module: MODULE_NAME})))
+        .pipe(plugins.concat('demo.js'))
+        .pipe(gulp.dest(path.join(distLocation, 'scripts')));
     });
 
     gulp.task('inline-templates', ['inline-src-templates', 'inline-demo-templates']);
@@ -498,7 +510,7 @@ module.exports = function (gulp) {
 
     // boot a webserver for the dev env, without building or watching
     gulp.task('serve-dev-internal', function (callback) {
-      server(callback, {livereload: true, port: 9001, roots: ['app', '.tmp', 'bower_components']});
+      server(callback, {livereload: true, port: 9001, roots: [webRoot, '.tmp', 'bower_components']});
     });
 
     gulp.task('build-demo', function (callback) {
@@ -506,7 +518,7 @@ module.exports = function (gulp) {
     });
 
     gulp.task('demo', ['build-demo'], function (callback) {
-      server(callback, {entrypoint: 'demo.html', livereload: true, port: 9001, roots: ['app', '.tmp', 'bower_components']});
+      server(callback, {entrypoint: 'demo.html', livereload: true, port: 9001, roots: [webRoot, '.tmp', 'bower_components']});
     });
 
     // boot a webserver for the dev env
