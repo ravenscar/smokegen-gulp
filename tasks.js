@@ -16,13 +16,14 @@ module.exports = function (gulp) {
   }
 
   try {
-    var config = JSON.parse(fs.readFileSync(path.join('smokegen-gulp.json')));
+    var config = JSON.parse(fs.readFileSync(path.join('smokegen.json')));
   } catch (err) {
-    console.error('Unable to parse smokegen-gulp.json');
+    console.error('Unable to parse smokegen.json');
     throw err;
   }
 
   var webRoot = config.webRoot;
+  var webRootRegEx = new RegExp(webRoot + '\/');
 
   var PROJECT_NAME = bowerJson.name || 'unknown-project';
   var MODULE_NAME = bowerJson.angularModule || (PROJECT_NAME + '-module');
@@ -118,12 +119,11 @@ module.exports = function (gulp) {
 
   function wireSrc(target, files, key) {
     var scriptString,
-      block = new RegExp('(.*' + key + '.*)[\\s\\S]*?(.*end' + key + '.*)'),
-      re = new RegExp(webRoot + '\/');
+      block = new RegExp('(.*' + key + '.*)[\\s\\S]*?(.*end' + key + '.*)');
 
 
     scriptString = _.map(files, function (filename) {
-      return '    <script src="' + filename.replace(re, '') + '"></script>';
+      return '    <script src="' + filename.replace(webRootRegEx, '') + '"></script>';
     }).join(os.EOL);
 
     return gulp.src(target)
@@ -200,8 +200,7 @@ module.exports = function (gulp) {
         } else {
 
           scriptString = _.map(files, function (filename) {
-            var re = new RegExp(webRoot + '\/');
-            return '@import "' + filename.replace(webRoot, '') + '";';
+            return '@import "' + filename.replace(webRootRegEx, '') + '";';
           }).join(os.EOL);
 
           defer.resolve(gulp.src(webRoot + '/main.scss')
