@@ -16,7 +16,8 @@ module.exports = function (gulp) {
   }
 
   try {
-    var config = JSON.parse(fs.readFileSync(path.join('smokegen.json')));
+    var config = require('../../smokegen.js');
+    console.log(config);
   } catch (err) {
     console.error('Unable to parse smokegen.json');
     throw err;
@@ -153,7 +154,8 @@ module.exports = function (gulp) {
       return gulp.src([webRoot + '/index.html', webRoot + '/main.scss'])
         .pipe(wiredep({
           ignorePath: config.tasks.wiredepSrc.ignorePath,
-          exclude: config.tasks.wiredepSrc.exclude
+          exclude: config.tasks.wiredepSrc.exclude,
+          fileTypes: config.tasks.wiredepSrc.fileTypes
         }))
         .pipe(gulp.dest(webRoot));
     });
