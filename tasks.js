@@ -17,7 +17,6 @@ module.exports = function (gulp) {
 
   try {
     var config = require('../../smokegen.js');
-    console.log(config);
   } catch (err) {
     console.error('Unable to parse smokegen.json');
     throw err;
