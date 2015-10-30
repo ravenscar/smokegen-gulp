@@ -15,13 +15,7 @@ module.exports = function (gulp) {
     throw err;
   }
 
-  try {
-    var config = require('../../smokegen.js');
-  } catch (err) {
-    console.error('Unable to parse smokegen.json');
-    throw err;
-  }
-
+  var config = require('../../smokegen.js');
   var webRoot = config.webRoot;
   var webRootRegEx = new RegExp(webRoot + '\/');
 
