@@ -130,13 +130,15 @@ module.exports = function (gulp) {
     gulp.task('clean-dist', function (cb) {
       del([distLocation], {force: true}, cb);
     });
+
     gulp.task('clean-dev', function (cb) {
       del(['.tmp'], cb);
     });
+
     gulp.task('clean', ['clean-dist', 'clean-dev']);
 
     gulp.task('lint', function () {
-      return gulp.src(['gulpfile.js', webRoot + '/**/*.js', '!' + webRoot + '/**/*spec.js', '!' + webRoot + '/**/*mock.js'])
+      return gulp.src(config.tasks.lint.gulpSrc)
         .pipe(plugins.jshint())
         .pipe(plugins.jshint.reporter(stylish))
         .pipe(plugins.jshint.reporter('fail'));
