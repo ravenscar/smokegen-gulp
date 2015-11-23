@@ -255,7 +255,7 @@ module.exports = function (gulp) {
         callback(new Error('no cssDir supplied to runCompass'));
         return;
       }
-      exec('compass compile ' + webRoot + '/main.scss --css-dir ' + cssDir + ' --sass-dir ' + webRoot + ' --import-path ' + config.runCompass.importPath, function (error, stdout, stderr) {
+      exec('compass compile ' + webRoot + '/main.scss --css-dir ' + cssDir + ' --sass-dir ' + webRoot + ' --import-path ' + config.tasks.runCompass.importPath, function (error, stdout, stderr) {
         if (stdout) {
           plugins.util.log(plugins.util.colors.red(stdout));
         }
