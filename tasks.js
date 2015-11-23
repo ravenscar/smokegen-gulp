@@ -188,7 +188,7 @@ module.exports = function (gulp) {
     gulp.task('wireapp-scss', function (callback) {
       var defer = deferred();
 
-      glob(webRoot + '/**/_*.{scss,sass}', function (er, files) {
+      glob(config.tasks.wireappScss.globPattern, function (er, files) {
         var scriptString;
 
         if (er) {
@@ -255,7 +255,7 @@ module.exports = function (gulp) {
         callback(new Error('no cssDir supplied to runCompass'));
         return;
       }
-      exec('compass compile ' + webRoot + '/main.scss --css-dir ' + cssDir + ' --sass-dir ' + webRoot + ' --import-path bower_components', function (error, stdout, stderr) {
+      exec('compass compile ' + webRoot + '/main.scss --css-dir ' + cssDir + ' --sass-dir ' + webRoot + ' --import-path ' + config.runCompass.importPath, function (error, stdout, stderr) {
         if (stdout) {
           plugins.util.log(plugins.util.colors.red(stdout));
         }
