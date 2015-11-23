@@ -32,6 +32,7 @@ module.exports = function (gulp) {
   var runSequence = require('run-sequence').use(gulp);
   var stylish = require('jshint-stylish');
   var vinylPaths = require('vinyl-paths');
+  var ngConstant = require('gulp-ng-constant');
 
   // gulp + plugins
   var plugins = require('gulp-load-plugins')();
@@ -126,6 +127,16 @@ module.exports = function (gulp) {
   }
 
   smokegenApi.common = function () {
+    gulp.task('development-config', function () {
+      return ngConstant(config.tasks.developmentConfig.ngConstant)
+        .pipe(gulp.dest('www'))
+    });
+
+    gulp.task('production-config', function () {
+      return ngConstant(config.tasks.productionConfig.ngConstant)
+        .pipe(gulp.dest('www'))
+    });
+
     // cleans up the build directories
     gulp.task('clean-dist', function (cb) {
       del([distLocation], {force: true}, cb);
@@ -269,6 +280,7 @@ module.exports = function (gulp) {
     gulp.task('compass-dist', function (callback) {
       runCompass(path.join(distLocation, 'styles'), callback);
     });
+
     gulp.task('compass-dev', function (callback) {
       runCompass('.tmp/styles', callback);
     });
