@@ -15,7 +15,7 @@ module.exports = function (gulp) {
     throw err;
   }
 
-  var config = require('../../smokegen.js');
+  var config = require(path.join(process.cwd(),'smokegen.js'));
   var webRoot = config.webRoot;
   var webRootRegEx = new RegExp(webRoot + '\/');
 
