@@ -15,7 +15,16 @@ module.exports = function (gulp) {
     throw err;
   }
 
-  var config = require(path.join(process.cwd(),'smokegen.js'));
+  var smokegenPath = path.join(process.cwd(),'smokegen.js');
+
+  if (fs.existsSync(smokegenPath)) {
+    var config = require(smokegenPath);
+  } else {
+    var smokegenJs = fs.readFileSync(path.join(__dirname, 'default-smokegen.js'));
+    fs.writeFileSync(path.join(process.cwd(), 'smokegen.js'), smokegenJs);
+    var config = require(smokegenPath);
+  }
+
   var webRoot = config.webRoot;
   var webRootRegEx = new RegExp(webRoot + '\/');
 
