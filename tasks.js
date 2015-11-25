@@ -20,9 +20,7 @@ module.exports = function (gulp) {
   if (fs.existsSync(smokegenPath)) {
     var config = require(smokegenPath);
   } else {
-    var smokegenJs = fs.readFileSync(path.join(__dirname, 'default-smokegen.js'));
-    fs.writeFileSync(path.join(process.cwd(), 'smokegen.js'), smokegenJs);
-    var config = require(smokegenPath);
+    var config = require(path.join(__dirname,'default-smokegen.js'));
   }
 
   var webRoot = config.webRoot;
