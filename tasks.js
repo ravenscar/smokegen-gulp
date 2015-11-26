@@ -133,15 +133,26 @@ module.exports = function (gulp) {
       .pipe(gulp.dest(webRoot));
   }
 
+  function wireConstants(env) {
+    return ngConstant(config.tasks.ngConstant[env])
+      .pipe(gulp.dest(webRoot))
+  }
+
   smokegenApi.common = function () {
-    gulp.task('development-config', function () {
-      return ngConstant(config.tasks.developmentConfig.ngConstant)
-        .pipe(gulp.dest('www'))
+    gulp.task('local-config', function () {
+      return wireConstants('local');
     });
 
-    gulp.task('production-config', function () {
-      return ngConstant(config.tasks.productionConfig.ngConstant)
-        .pipe(gulp.dest('www'))
+    gulp.task('dev-config', function () {
+      return wireConstants('dev');
+    });
+
+    gulp.task('staging-config', function () {
+      return wireConstants('staging');
+    });
+
+    gulp.task('release-config', function () {
+      return wireConstants('release');
     });
 
     // cleans up the build directories
