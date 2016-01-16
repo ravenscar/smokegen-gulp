@@ -402,7 +402,7 @@ module.exports = function (gulp) {
 
     // build the distribution, but clean first
     gulp.task('dist', function (callback) {
-      runSequence('test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'lint', 'dist-bower-json', callback);
+      runSequence('lint', 'test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'dist-bower-json', callback);
     });
 
     gulp.task('default', ['dist']);
