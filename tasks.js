@@ -156,12 +156,12 @@ module.exports = function (gulp) {
     });
 
     // cleans up the build directories
-    gulp.task('clean-dist', function (cb) {
-      del([distLocation], {force: true}, cb);
+    gulp.task('clean-dist', function () {
+      return del([distLocation], {force: true});
     });
 
-    gulp.task('clean-dev', function (cb) {
-      del(['.tmp'], cb);
+    gulp.task('clean-dev', function () {
+      return del(['.tmp']);
     });
 
     gulp.task('clean', ['clean-dist', 'clean-dev']);
@@ -255,8 +255,6 @@ module.exports = function (gulp) {
       var assets = plugins.useref.assets();
       return gulp.src(webRoot + '/index.html')
         .pipe(plugins.replace(/\r\n/gm, '\n'))// replace all \r\n with \n as useref spits the dummy if we mix unix and windows EOL, and teamcity won't checkout CRLF
-        .pipe(assets)
-        .pipe(assets.restore())
         .pipe(plugins.useref())
         .pipe(gulp.dest(distLocation));
     });
@@ -437,8 +435,8 @@ module.exports = function (gulp) {
       runSequence('wire', 'test-nowire', callback);
     });
 
-    function rm(paths, cb) {
-      del(paths, {force: true}, cb);
+    function rmP(paths) {
+      return del(paths, {force: true});
     }
 
     gulp.task('rev-assets', function (cb) {
@@ -451,7 +449,7 @@ module.exports = function (gulp) {
         .pipe(plugins.rev.manifest())
         .pipe(gulp.dest(distLocation))
         .on('end', function () {
-          rm(oldPaths.paths, cb);
+          rmP(oldPaths.paths).then(cb);
         });
     });
 
@@ -467,7 +465,7 @@ module.exports = function (gulp) {
         .pipe(plugins.rev.manifest(path.join(distLocation, "rev-manifest.json"), { merge: true} ))
         .pipe(gulp.dest(''))
         .on('end', function () {
-          rm(oldPaths.paths, cb);
+          rmP(oldPaths.paths).then(cb);
         });
     });
 
@@ -491,7 +489,7 @@ module.exports = function (gulp) {
 
     gulp.task('minify-css', function () {
       return gulp.src(distLocation + '/styles/**/*.css')
-        .pipe(plugins.minifyCss())
+        .pipe(plugins.cleanCSS())
         .pipe(gulp.dest(path.join(distLocation, 'styles')));
     });
 
