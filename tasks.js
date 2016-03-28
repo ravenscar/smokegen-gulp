@@ -252,7 +252,6 @@ module.exports = function (gulp) {
 
     // concats the js and css files as defined by the build:<> blocks in the index.html
     gulp.task('useref', function () {
-      var assets = plugins.useref.assets();
       return gulp.src(webRoot + '/index.html')
         .pipe(plugins.replace(/\r\n/gm, '\n'))// replace all \r\n with \n as useref spits the dummy if we mix unix and windows EOL, and teamcity won't checkout CRLF
         .pipe(plugins.useref())
