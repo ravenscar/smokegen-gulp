@@ -434,8 +434,10 @@ module.exports = function (gulp) {
       runSequence('wire', 'test-nowire', callback);
     });
 
-    function rmP(paths) {
-      return del(paths, {force: true});
+    function rm(paths, cb) {
+      del(paths, {force: true})
+          .then(function () { cb(); })
+          .catch(cb);
     }
 
     gulp.task('rev-assets', function (cb) {
@@ -448,7 +450,7 @@ module.exports = function (gulp) {
         .pipe(plugins.rev.manifest())
         .pipe(gulp.dest(distLocation))
         .on('end', function () {
-          rmP(oldPaths.paths).then(cb);
+          rm(oldPaths.paths, cb);
         });
     });
 
@@ -464,7 +466,7 @@ module.exports = function (gulp) {
         .pipe(plugins.rev.manifest(path.join(distLocation, "rev-manifest.json"), { merge: true} ))
         .pipe(gulp.dest(''))
         .on('end', function () {
-          rmP(oldPaths.paths).then(cb);
+          rm(oldPaths.paths, cb);
         });
     });
 
@@ -488,7 +490,7 @@ module.exports = function (gulp) {
 
     gulp.task('minify-css', function () {
       return gulp.src(distLocation + '/styles/**/*.css')
-        .pipe(plugins.cleanCSS())
+        .pipe(plugins.cleanCss())
         .pipe(gulp.dest(path.join(distLocation, 'styles')));
     });
 
