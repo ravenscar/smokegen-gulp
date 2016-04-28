@@ -535,7 +535,7 @@ module.exports = function (gulp) {
 
     // build the distribution but don't run tests
     gulp.task('dist-notest', function (callback) {
-      runSequence('lint', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'rev', 'compress', callback);
+      runSequence('wire', 'lint', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'rev', 'compress', callback);
     });
 
     // boot a webserver for the dev env, without building or watching
