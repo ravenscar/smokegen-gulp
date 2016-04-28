@@ -533,6 +533,11 @@ module.exports = function (gulp) {
       runSequence('test', 'lint', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'rev', 'compress', callback);
     });
 
+    // build the distribution but don't run tests
+    gulp.task('dist-notest', function (callback) {
+      runSequence('lint', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'rev', 'compress', callback);
+    });
+
     // boot a webserver for the dev env, without building or watching
     gulp.task('serve-dev-internal', function (callback) {
       server(callback, {livereload: true, port: 9001, roots: [webRoot, '.tmp', 'bower_components']});
