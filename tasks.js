@@ -156,12 +156,12 @@ module.exports = function (gulp) {
     });
 
     // cleans up the build directories
-    gulp.task('clean-dist', function (cb) {
-      del([distLocation], {force: true}, cb);
+    gulp.task('clean-dist', function () {
+      return del([distLocation], {force: true});
     });
 
-    gulp.task('clean-dev', function (cb) {
-      del(['.tmp'], cb);
+    gulp.task('clean-dev', function () {
+      return del(['.tmp']);
     });
 
     gulp.task('clean', ['clean-dist', 'clean-dev']);
@@ -252,11 +252,8 @@ module.exports = function (gulp) {
 
     // concats the js and css files as defined by the build:<> blocks in the index.html
     gulp.task('useref', function () {
-      var assets = plugins.useref.assets();
       return gulp.src(webRoot + '/index.html')
         .pipe(plugins.replace(/\r\n/gm, '\n'))// replace all \r\n with \n as useref spits the dummy if we mix unix and windows EOL, and teamcity won't checkout CRLF
-        .pipe(assets)
-        .pipe(assets.restore())
         .pipe(plugins.useref())
         .pipe(gulp.dest(distLocation));
     });
@@ -402,7 +399,7 @@ module.exports = function (gulp) {
 
     // build the distribution, but clean first
     gulp.task('dist', function (callback) {
-      runSequence('test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'lint', 'dist-bower-json', callback);
+      runSequence('lint', 'test', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'dist-bower-json', callback);
     });
 
     gulp.task('default', ['dist']);
@@ -438,7 +435,9 @@ module.exports = function (gulp) {
     });
 
     function rm(paths, cb) {
-      del(paths, {force: true}, cb);
+      del(paths, {force: true})
+          .then(function () { cb(); })
+          .catch(cb);
     }
 
     gulp.task('rev-assets', function (cb) {
@@ -491,7 +490,7 @@ module.exports = function (gulp) {
 
     gulp.task('minify-css', function () {
       return gulp.src(distLocation + '/styles/**/*.css')
-        .pipe(plugins.minifyCss())
+        .pipe(plugins.cleanCss())
         .pipe(gulp.dest(path.join(distLocation, 'styles')));
     });
 
@@ -534,6 +533,11 @@ module.exports = function (gulp) {
     // build the distribution, but clean first
     gulp.task('dist', function (callback) {
       runSequence('test', 'lint', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'rev', 'compress', callback);
+    });
+
+    // build the distribution but don't run tests
+    gulp.task('dist-notest', function (callback) {
+      runSequence('wire', 'lint', 'clean-dist', 'useref', 'inline-src-templates', 'ng-annotate', 'compass-dist', 'copy-assets', 'copy-fonts-dist', 'rev', 'compress', callback);
     });
 
     // boot a webserver for the dev env, without building or watching
