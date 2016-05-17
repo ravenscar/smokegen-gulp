@@ -179,7 +179,7 @@ module.exports = function (gulp) {
     gulp.task('wiredep-prep-app', function () {
       return gulp.src([webRoot + '/_index.html_', webRoot + '/_main.scss_'])
         .pipe(plugins.rename(function (path) {
-          path.basename = path.basename.replace(/_/, '', 'g');
+          path.basename = path.basename.replace(/_/g, '');
         }))
         .pipe(gulp.dest(webRoot));
     });
@@ -187,7 +187,7 @@ module.exports = function (gulp) {
     gulp.task('wiredep-prep-test', function () {
       return gulp.src(['_karma.conf.js_'])
         .pipe(plugins.rename(function (path) {
-          path.basename = path.basename.replace(/_/, '', 'g');
+          path.basename = path.basename.replace(/_/g, '');
         }))
         .pipe(gulp.dest('./'));
     });
