@@ -180,7 +180,7 @@ module.exports = function (gulp) {
       return gulp.src([webRoot + '/_index.html_', webRoot + '/_main.scss_'])
         .pipe(plugins.rename(function (path) {
           path.basename = path.basename.replace(/^_/, '');
-          path.extname = path.basename.replace(/_$/, '');
+          path.extname = path.extname.replace(/_$/, '');
         }))
         .pipe(gulp.dest(webRoot));
     });
@@ -189,7 +189,7 @@ module.exports = function (gulp) {
       return gulp.src(['_karma.conf.js_'])
         .pipe(plugins.rename(function (path) {
           path.basename = path.basename.replace(/^_/, '');
-          path.extname = path.basename.replace(/_$/, '');
+          path.extname = path.extname.replace(/_$/, '');
         }))
         .pipe(gulp.dest('./'));
     });
