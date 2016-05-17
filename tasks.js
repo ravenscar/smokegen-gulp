@@ -527,7 +527,9 @@ module.exports = function (gulp) {
     });
 
     // tasks so that the dev env is ready to be served, for testing
-    gulp.task('build', ['wire', 'compass-dev', 'copy-fonts-dev']);
+    gulp.task('build', function (callback) {
+      runSequence('wire', 'compass-dev', 'copy-fonts-dev', callback);
+    });
 
     // build the distribution, but clean first
     gulp.task('dist', function (callback) {
