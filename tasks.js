@@ -173,6 +173,25 @@ module.exports = function (gulp) {
         .pipe(plugins.jshint.reporter('fail'));
     });
 
+
+    gulp.task('wiredep-prep', ['wiredep-prep-app', 'wiredep-prep-test']);
+
+    gulp.task('wiredep-prep-app', function () {
+      return gulp.src([webRoot + '/_index.html', webRoot + '/_main.scss'])
+        .pipe(plugins.rename(function (path) {
+          path.basename = path.basename.replace(/_/, '');
+        }))
+        .pipe(gulp.dest(webRoot));
+    });
+
+    gulp.task('wiredep-prep-test', function () {
+      return gulp.src(['_karma.conf.js'])
+        .pipe(plugins.rename(function (path) {
+          path.basename = path.basename.replace(/_/, '');
+        }))
+        .pipe(gulp.dest('./'));
+    });
+
     // wires up index.html and main.scss with the bower dependencies, modifies the files in-place (in webRoot/)
     gulp.task('wiredep-src', function () {
       return gulp.src([webRoot + '/index.html', webRoot + '/main.scss'])
@@ -318,7 +337,7 @@ module.exports = function (gulp) {
 
     /**
      * Copy the source sass (scss) files from webRoot/ to dist/
-     * Will rename main.scss to PROJECT_NAME.scss
+     * Will rename main.scss to _PROJECT_NAME.scss
      *
      * This way modules using this one can use the scss sources rather than the MUCH larger dist/styles/main.css
      */
@@ -390,7 +409,7 @@ module.exports = function (gulp) {
     smokegenApi.common();
 
     gulp.task('wire', function (callback) {
-      runSequence('wiredep-src', 'wiredep-test', 'wireapp-ng', callback);
+      runSequence('wiredep-prep', 'wiredep-src', 'wiredep-test', 'wireapp-ng', callback);
     });
 
     gulp.task('test', function (callback) {
@@ -427,7 +446,7 @@ module.exports = function (gulp) {
     gulp.task('inline-templates', ['inline-src-templates', 'inline-demo-templates']);
 
     gulp.task('wire', function (callback) {
-      runSequence('wiredep-src', 'wiredep-test', 'wireapp-ng', 'wireapp-scss', callback);
+      runSequence('wiredep-prep', 'wiredep-src', 'wiredep-test', 'wireapp-ng', 'wireapp-scss', callback);
     });
 
     gulp.task('test', function (callback) {
