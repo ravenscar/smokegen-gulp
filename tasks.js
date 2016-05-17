@@ -179,7 +179,9 @@ module.exports = function (gulp) {
     gulp.task('wiredep-prep-app', function () {
       return gulp.src([webRoot + '/_index.html_', webRoot + '/_main.scss_'])
         .pipe(plugins.rename(function (path) {
+          console.log("BASENAME PRE: ", path.basename);
           path.basename = path.basename.replace(/_/g, '');
+          console.log("BASENAME POST: ", path.basename);
         }))
         .pipe(gulp.dest(webRoot));
     });
