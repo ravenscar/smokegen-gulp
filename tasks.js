@@ -396,6 +396,12 @@ module.exports = function (gulp) {
       sass.on('change', function (event) {
         plugins.util.log('Sass file changed ' + event.path + ' was ' + event.type + ', running compass');
       });
+      sass.on('add', function (event) {
+        plugins.util.log('Sass file added ' + event.path + ' was ' + event.type + ', running compass');
+      });
+      sass.on('unlink', function (event) {
+        plugins.util.log('Sass file unlinked ' + event.path + ' was ' + event.type + ', running compass');
+      });
 
       // watch all html/css/js files in the webRoot and .tmp dirs
       src = gulp.watch('{' + webRoot + ',.tmp}/**/*.{html,css,js}');
@@ -403,7 +409,14 @@ module.exports = function (gulp) {
         plugins.util.log('Source file changed ' + event.path + ' was ' + event.type);
         plugins.livereload.reload();
       });
-
+      src.on('add', function (event) {
+        plugins.util.log('Source file added ' + event.path + ' was ' + event.type);
+        plugins.livereload.reload();
+      });
+      src.on('unlink', function (event) {
+        plugins.util.log('Source file unlinked ' + event.path + ' was ' + event.type);
+        plugins.livereload.reload();
+      });
     });
   };
 
